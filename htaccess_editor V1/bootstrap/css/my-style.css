@@ -7,13 +7,15 @@ html{
 	margin-top : 50px;	
 }
 
-input[type="text"] {	
+input[type="text"],input[type="password"]{	
 	width:70%;
 }
+
 
 #content {
 border : #000000 thin solid ;
 }
+
 .titre{
 color:lightblue;
 display : block ;

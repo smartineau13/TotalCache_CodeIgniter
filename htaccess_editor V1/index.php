@@ -1,74 +1,107 @@
 <?php
-//SQLite database creation
+/**
+  * @author Sébastien Martineau
+  * @date obctober 9th, 2014
+  * @version 1.0
+  * @file
+  */
+
+
+    //Creation of SQLite database
 	$dbname = 'base';
 	$tableConfigHtaccess = "config_htaccess";
+	$tableConnection = "connection";
 
 	if(!class_exists('SQLite3'))
 	  die("SQLite 3 NOT supported.");
 
-	$base=new SQLite3($dbname, 0666); 
-
-	$query = "CREATE TABLE IF NOT EXISTS $tableConfigHtaccess (
-				ID int NOT NULL PRIMARY KEY,
-				site_path VARCHAR(127),            
-				cache_path VARCHAR(127),
-				fully_disabled_cache boolean,
-				controller_disabled VARCHAR(63),
-				method_disabled VARCHAR(127)            
-				)";
-				
-	$results = $base->exec($query);
-	$query = "SELECT count(*) FROM $tableConfigHtaccess WHERE ID=1";
-	$base->exec($query);
-	$query = "INSERT INTO $tableConfigHtaccess VALUES (1, 'scripts/CodeIgniter', 'static', 0, '', '')";
-	$base->exec($query);
-
-
-	//Définition des constantes
+	$base=new SQLite3($dbname, 0666);
+	initializeDatabase();
+	
+	
+	//Definition of htaccess delimiters 
 	define('CACHE_DELIMITER_START','#Beginning of cache. Don\'t erase this line');
 	define('CACHE_DELIMITER_END','#End of cache. Don\'t erase this line');	
 	
-	
-	if (isset($_POST['generate_htaccess'])) {
-	   modifyHtaccess();
-    } 
-	
-	//If button "change site path" was pressed
-    if (isset($_POST['site_path'])) {
-	   updateDataBase('site_path', $_POST['site_path']);
-	   modifyHtaccess();
-    } 
-	
-	//If button "change cache path" was pressed
-	if (isset($_POST['cache_path'])) {
-	   updateDataBase('cache_path', $_POST['cache_path']);
-	   modifyHtaccess();
-    } 
-	
-	//If button "fully disable cache" was pressed
-	if (isset($_POST['fully_disable_cache'])) {	   
-	   updateDataBase('fully_disabled_cache', true);
-	   updateDataBase('controller_disabled', '');
-	   updateDataBase('method_disabled', '');
-	   modifyHtaccess();
-    } 
-	
-	//If button "enable cache" was pressed
-	if (isset($_POST['enable_cache'])) {
-	   updateDataBase('fully_disabled_cache', false);
-	   updateDataBase('controller_disabled', '');
-	   updateDataBase('method_disabled', '');
-	   modifyHtaccess();	   
-    } 
-	
-	if (isset($_POST['disable_cache_controller'])) {
-	    updateDataBase('fully_disabled_cache', false);
-		updateDataBase('controller_disabled', $_POST['disable_cache_controller']);
-		updateDataBase('method_disabled', $_POST['disable_cache_method']);
-		modifyHtaccess();
-    } 	
-	
+	session_start();
+	if (isset($_POST['destroy_session'])) {
+		// On détruit les variables de notre session
+		session_unset ();
 
+		// On détruit notre session
+		session_destroy ();
+	}
+	
+	if (isset($_POST['password'])) {
+		if (isAlreadyDefinedPassword()){
+			if (checkPassword($_POST['password'])) {
+				$_SESSION['password'] = $_POST['password'];
+			} else {
+			echo 'wrong password';
+			}			
+		} else {
+			insertPasswordInTable($_POST['password']);
+			$_SESSION['password'] = $_POST['password'];
+		}
+	}
+	
+	//if a session is opened
+	if (isset($_SESSION['password'])) {		
+	
+		
+		//If button "change site path" was pressed
+		if (isset($_POST['site_path'])) {
+		   updateHtaccessConfigTable('site_path', $_POST['site_path']);
+		   modifyHtaccess();
+		} 
+		
+		//If button "change cache path" was pressed
+		if (isset($_POST['cache_path'])) {
+		   updateHtaccessConfigTable('cache_path', $_POST['cache_path']);
+		   modifyHtaccess();
+		   changeCachePathInLibrarie($_POST['cache_path']);
+		} 
+		
+		//If button "fully disable cache" was pressed
+		if (isset($_POST['fully_disable_cache'])) {	   
+		   updateHtaccessConfigTable('fully_disabled_cache', true);
+		   updateHtaccessConfigTable('controller_disabled', '');
+		   updateHtaccessConfigTable('method_disabled', '');
+		   modifyHtaccess();
+		} 
+		
+		//If button "enable cache" was pressed
+		if (isset($_POST['enable_cache'])) {
+		   updateHtaccessConfigTable('fully_disabled_cache', false);
+		   updateHtaccessConfigTable('controller_disabled', '');
+		   updateHtaccessConfigTable('method_disabled', '');
+		   modifyHtaccess();	   
+		} 
+		
+		//If button "partially disable cache" was pressed
+		if (isset($_POST['disable_cache_controller'])) {
+			updateHtaccessConfigTable('fully_disabled_cache', false);
+			updateHtaccessConfigTable('controller_disabled', $_POST['disable_cache_controller']);
+			updateHtaccessConfigTable('method_disabled', $_POST['disable_cache_method']);
+			modifyHtaccess();
+		}
+	} else {?>
+		
+	<div class="row">
+		
+			<form method="post" action="">
+				<div class="col-md-4"><label>You are not connected</label></div>
+				<div class="col-md-4"><label for="password">Enter password :</label><input type="password" class="form-control" name="password" id="" /></div>
+				<div class="col-md-4"><br/><input type="submit" value="Validate" /></div>
+			</form>
+	  
+	</div>
+<?php
+
+	}
+	
+	
+/*---------------------------------------------------Functions---------------------------------------------*/
 	
 	/**
 	 * Creates the cache part of the htaccess surrounded with delimiters. Uses datas contained in 
@@ -120,9 +153,8 @@ RewriteEngine on
 
 
 #Sinon si le fichier n\'est pas en cache 
-#RewriteCond %{DOCUMENT_ROOT}/'.$sSitePath.'/'.$sCachePath.'/$1 !-f
 #Et que l\'on ne tente pas déjà d\'accéder à l\'application CodeIgniter, au dossier d\'images, à robot.txt ou aux pages statiques
-RewriteCond $1 !^('.$sCachePath.'|index\.php|images|robots\.txt|editeur_htaccess.php)
+RewriteCond $1 !^('.$sCachePath.'|index\.php|images|robots\.txt|htaccess_editor)
 #Alors on redirige vers l\'application CodeIgniter en ajoutant index.php/ dans l\'url
 RewriteRule ^(.*)$ index.php/$1 [L]
 '.CACHE_DELIMITER_END;
@@ -156,7 +188,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	 * @param String $sContent Content to write in file
 	 */
 	function writeInHtaccessFile($sContent) {
-		$handle = fopen('.htaccess', 'w');
+		$handle = fopen('../.htaccess', 'w');
 		fwrite($handle, $sContent);
 		fclose($handle);
 	}	
@@ -169,11 +201,11 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	 */
 	function changeCachePathInLibrarie ($sNewCachePath) {		
 		
-		$totalCacheContent = file_get_contents('application/libraries/TotalCache.php');
+		$totalCacheContent = file_get_contents('../application/libraries/TotalCache.php');
 		$pattern = '/define\(\'BASE_PATH.*\;/';
 		$replacement = 'define(\'BASE_PATH\',\''.$sNewCachePath.'/\');';
 		$newCacheLibrarie = preg_replace($pattern, $replacement, $totalCacheContent);
-		$handle = fopen('application/libraries/TotalCache.php', 'w');
+		$handle = fopen('../application/libraries/TotalCache.php', 'w');
 		fwrite($handle, $newCacheLibrarie);
 		fclose($handle);
 	}
@@ -195,6 +227,39 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 		    writeInHtaccessFile($sNewHtaccessCache);
 		}
 	}
+
+/*--------------------------------------------Functions concerning SQLite database---------------------------------------------*/	
+	
+	
+	/** Creates database and tables if they don't already exist  
+	 * 
+	 */
+	function initializeDatabase() {
+		 
+		//Creation of table config_htaccess 
+		$query = "CREATE TABLE IF NOT EXISTS " . $GLOBALS['tableConfigHtaccess']." (
+					ID int NOT NULL PRIMARY KEY,
+					site_path VARCHAR(127),            
+					cache_path VARCHAR(127),
+					fully_disabled_cache boolean,
+					controller_disabled VARCHAR(63),
+					method_disabled VARCHAR(127)            
+					)";					
+		$results = $GLOBALS['base']->exec($query);
+		
+		//Creation of table password
+		$query = "CREATE TABLE IF NOT EXISTS " . $GLOBALS['tableConnection']." (
+					ID int NOT NULL PRIMARY KEY,
+					password VARCHAR(64)                        
+					)";					
+		$results = $GLOBALS['base']->exec($query);
+
+		//Insertion of default values
+		if (!existDefaultConfig()) {
+			$query = "INSERT INTO ". $GLOBALS['tableConfigHtaccess']." VALUES (1, 'scripts/CodeIgniter', 'static', 0, '', '')";
+			$GLOBALS['base']->exec($query);
+		}
+	}
 	
 	
 	/**
@@ -203,9 +268,14 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	 * @param String $sField Database field to update
 	 * @param mixed $newValue New value of field $field
 	 */
-	function updateDataBase ($sField, $newValue){
+	function updateHtaccessConfigTable($sField, $newValue){
 		$query = 'UPDATE '.$GLOBALS['tableConfigHtaccess']." SET $sField = '$newValue' WHERE ID = 1";
 		$results = $GLOBALS['base']->exec($query);
+	}
+	
+	function insertPasswordInTable($sPassword) {
+		$query = "INSERT INTO ". $GLOBALS['tableConnection']." VALUES (1, '$sPassword')";
+		$GLOBALS['base']->exec($query);
 	}
 	
 	
@@ -225,98 +295,141 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 		}		
 	}
 	
-	function displayTable () {
-	$query = "SELECT * FROM config_htaccess";
-	$results = $GLOBALS['base']->query($query);
-	$row = $results->fetchArray();
-
-	if(count($row)>0)
-	{
-	   echo $row['ID'];
-	   echo $row['site_path']; 
-	   echo $row['cache_path'];	
-	}   
+	/**
+	 * Returns true if table config_htaccess already contains values
+	 */
+	function existDefaultConfig() {
+		$query = 'SELECT count(*) as nb_rows FROM ' . $GLOBALS['tableConfigHtaccess'] .' WHERE ID=1';
+		$results = $GLOBALS['base']->query($query);
+		$row = $results->fetchArray();
+		
+		if ($row['nb_rows']>0) {
+		  return true;	
+		}  				
+		return false;
 	}
-?>
-
-
-
-
-<!------------------------------------------------ Vue--------------------------------------------------->	
-<html lang="fr">
+	
+	/**
+	 * Returns true if password entered corresponds to password saved in table config_htaccess
+	 */
+	function checkPassword($sPassword) {
+		$query = 'SELECT count(*) as nb_rows FROM ' . $GLOBALS['tableConnection']." WHERE password='$sPassword'";
+		$results = $GLOBALS['base']->query($query);
+		$row = $results->fetchArray();
+		
+		if ($row['nb_rows']>0) {
+		  return true;	
+		}  				
+		return false;	
+	}
+	
+	
+	/**
+	 * Returns true if a password has already been entered in table config_htaccess
+	 */
+	function isAlreadyDefinedPassword() {
+		$query = 'SELECT count(*) as nb_rows FROM ' . $GLOBALS['tableConnection'];
+		$results = $GLOBALS['base']->query($query);
+		$row = $results->fetchArray();
+		if ($row['nb_rows']>0) {
+		  return true;	
+		}  				
+		return false;	
+	}
+	
+	function afficheTable(){
+		$query = 'SELECT * FROM ' . $GLOBALS['tableConnection'];
+		$results = $GLOBALS['base']->query($query);
+		$row = $results->fetchArray();
+		echo $row['ID'];
+		echo $row['password'];	
+	}
+	
+	
+	
+	
+	
+	//<!------------------------------------------------ View --------------------------------------------------->	
+?><html lang="fr">
 <head>
 	<link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet">
 	<link href="bootstrap/css/my-style.css" type="text/css" rel="stylesheet">
 	<meta charset="UTF-8">
 </head>
-
+<!-- Title -->
 <h1>Htaccess editor</h1>
-<!--Button to generate htaccess-->
-<form method="post" action="editeur_htaccess.php">
-	<input type="hidden" value="" name="generate_htaccess"> 
-	
-	<div class="col-xs-push-8"><input type="submit" value="Generate default Htaccess file"></div>
-</form> 
+
+<!-- form to create password-->
+
 
 
 <!-- form to modify site path-->
-<form method="post" action="editeur_htaccess.php">
+<form method="post" action="">
     <div class="row">
         <div class="col-md-4"><label for="site_path">Enter site path:</label></div>
-        <div class="col-md-4"><input type="text" name="site_path" id="" placeholder="Ex : scripts/monsite" size="30" /></div>
+        <div class="col-md-4"><input type="text" class="form-control" name="site_path" id="" placeholder="Ex : scripts/monsite" /></div>
 		<div class="col-md-4"><input type="submit" value="Update site path" /></div>
     </div>
 </form>
 
 <!-- form to modify cache path-->
-<form method="post" action="editeur_htaccess.php">
+<form method="post" action="">
     <div class="row">
         <div class="col-md-4"><label for="site_path">Enter cache path:</label></div>
-        <div class="col-md-4"><input type="text" name="cache_path" id="" placeholder="Ex : scripts/monsite" size="30" /></div>
+        <div class="col-md-4"><input type="text" class="form-control" name="cache_path" id="" placeholder="Ex : static"  /></div>
 		<div class="col-md-4"><input type="submit" value="Update cache path" /></div>
     </div>
 </form>
 
 <!-- form to disable cache partially -->
-<form method="post" action="editeur_htaccess.php">
+<form method="post" action="">
     <div class="row">
-		<div class="col-md-4"><label>Désactivation partielle du cache <label/></div>
+		<div class="col-md-4"><label>Partially disable cache <label/></div>
         <div class="col-md-4">
-			<label for="disable_cache_controller">Pour le contôleur :</label>
-			<input type="text" name="disable_cache_controller" id="" placeholder="Ex : controller" size="30" />
-			<label for="disable_cache_method">Pour la méthode :</label>
-			<input type="text" name="disable_cache_method" id="" placeholder="Ex : method" size="30" />
+			<label for="disable_cache_controller">For contoller :</label>
+			<input type="text" class="form-control" name="disable_cache_controller" id="" placeholder="Ex : controller" />
+			<label for="disable_cache_method">For method :</label>
+			<input type="text" class="form-control" name="disable_cache_method" id="" placeholder="Ex : method" />
 		</div>
-		<div class="col-md-4"><input type="button" value="Partially disable cache"/></div>
+		<div class="col-md-4"><br/><br/><input type="submit" value="Partially disable cache"/></div>
     </div>
 </form>
 
-<!-- form to disable cache fully-->	
-<form method="post" action="editeur_htaccess.php">
+
 <div class="row">
-	<input type="hidden" value="" name="fully_disable_cache"> 
-	<input type="submit" value="Fully disable cache">
+
+	<!--Summary of htaccess config-->
+	<div id="content" class="col-md-4">
+		<span class="titre">Htaccess configuration summary</span>
+		<label> Your site path: </label> <?php if (isset($_SESSION['password'])) echo getValue('site_path')?> <br/>
+		<label>Cache path: </label> <?php if (isset($_SESSION['password'])) echo getValue('cache_path')?><br/>
+		<label>Cache fully disabled: </label> <?php if (isset($_SESSION['password'])) {
+														if (getValue('fully_disabled_cache') == true) { 
+															echo 'YES'; 
+															} else {echo 'NO';}}?> <br/>
+		<label>Cache partially disabled</label><br/>
+		<label>-for controller: </label> <?php if (isset($_SESSION['password'])) echo getValue('controller_disabled')?><br/>
+		<label>-for method: </label> <?php if (isset($_SESSION['password'])) echo getValue('method_disabled')?>
+	</div>
+	<div class="col-md-4"></div>
+	<div class="col-md-4">
+		<!-- button to disable cache fully-->	
+		<form method="post" action="">
+			<input type="hidden" value="" name="fully_disable_cache"> 
+			<input type="submit" value="Fully disable cache">
+		</form> 
+
+		<!-- button to enable cache-->
+		<form method="post" action="">	
+			<input type="hidden" value="" name="enable_cache"> 
+			<input type="submit" value="Enable cache">		
+		</form> 
+	</div>
 </div>
-</form> 
-
-<!-- button to enable cache-->
-<form method="post" action="editeur_htaccess.php">
-<div class="row">
-	<input type="hidden" value="" name="enable_cache"> 
-	<input type="submit" value="Enable cache">
-</div>
-</form> 
 
 
-<!--Summary of htaccess config-->
-<div id="content" class="col-md-4">
-	<span class="titre">Htaccess configuration summary</span>
-	<label> Your site path: </label> <?php echo getValue('site_path')?> <br/>
-	<label>Cache path: </label> <?php echo getValue('cache_path')?><br/>
-	<label>Cache fully disabled: </label> <?php if (getValue('fully_disabled_cache') == true) echo 'YES'; else echo 'NO';?> <br/>
-	<label>Cache partially disabled<br/>
-	-for controller: </label> <?php echo getValue('controller_disabled')?><br/>
-	<label>-for method: </label> <?php echo getValue('method_disabled')?>
-</div>
-
+		<form method="post" action="">
+			<input type="hidden" value="" name="destroy_session"> 	
+			<input type="submit" value="Disconnect">
+		</form> 
 </html>
