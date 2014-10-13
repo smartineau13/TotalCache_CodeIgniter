@@ -7,8 +7,11 @@
 
 2- To load it in CodeIgniter there are two possibilities:
 In application/config/autoload.php look for the following instruction $autoload['libraries']= array(); and add totalcache. 
- 
- <div align="center" style="border: 1px solid"> $autoload['libraries']= array('totalcache');  </div>
+
+> 
+ $autoload['libraries']= array('totalcache');|
+ -----------|
+ |
 
 This way the library is loaded for the whole application.
 Load it directly in the class where you want to use it. 
