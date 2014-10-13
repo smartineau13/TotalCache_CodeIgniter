@@ -44,10 +44,17 @@ viewAndCache() method will create the file param.html which will contain the vie
 4- So that the cache file is served directly without invoking CodeIgniter, you need to add these instructions in your htaccess file at your website's root.
 
 >_RewriteEngine on_  
+<<<<<<< HEAD
 >_RewriteCond %{DOCUMENT_ROOT}/yourwebsite.com/static/$1 -f_  
 >_RewriteRule ^(.*)$ static/$1 [L]_  
 >RewriteCond $1 !^(static|index\.php|images|robots\.txt)_  
 >RewriteRule ^(.*)$ index.php/$1 [L]_
+=======
+>__RewriteCond %{DOCUMENT_ROOT}/yourwebsite.com/static/$1 -f__  
+>__RewriteRule ^(.*)$ static/$1 [L]__  
+>__RewriteCond $1 !^(static|index\.php|images|robots\.txt)__ 
+>__RewriteRule ^(.*)$ index.php/$1 [L]__
+>>>>>>> origin/master
 
 
 
