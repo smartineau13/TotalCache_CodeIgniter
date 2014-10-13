@@ -31,8 +31,8 @@ $this->load->library('totalcache');|
 
 
 Example:
->
 
+>
   yourwebsite.com/controller/method/param|      
  ---------------- |
  |
@@ -74,8 +74,8 @@ __Change cache path__
 
 The default directory to save cache files is "static". You can modify it.
 
-**Note**:
- this action will modify the code of library TotalCache. Make sure you added it in application/libraries.|      
+>
+**Note**: this action will modify the code of library TotalCache. Make sure you added it in application/libraries.|      
  ---------------- |
  |
 
