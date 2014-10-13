@@ -9,9 +9,9 @@
 In application/config/autoload.php look for the following instruction $autoload['libraries']= array(); and add totalcache. 
  
  >
- |$autoload['libraries']= array('totalcache');|      
- |---------------- |
- ||
+ $autoload['libraries']= array('totalcache');|      
+ ---------------- |
+ |
 
 
 This way the library is loaded for the whole application.
