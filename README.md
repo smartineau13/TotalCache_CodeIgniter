@@ -30,7 +30,6 @@ $this->load->library('totalcache');|
  ---------------- |
  |
 
-<p>sldklsk</p>
 
 Example:
 >
