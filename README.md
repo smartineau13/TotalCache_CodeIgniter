@@ -25,7 +25,7 @@ $this->load->library('totalcache');|
 3- In your controller, instead of calling $this->load->view('view_name',$data) to load view, use method viewAndCache of library TotalCache
 
 >
- $his->totalchache->viewAndCache('view_name', $data);|      
+ $this->totalchache->viewAndCache('view_name', $data);|      
  ---------------- |
  |
 
@@ -74,6 +74,9 @@ __Change cache path__
 
 The default directory to save cache files is "static". You can modify it.
 
+__Note__: this action will modify the code of library TotalCache. Make sure you added it in application/libraries.|      
+ ---------------- |
+ |
 
 
 
