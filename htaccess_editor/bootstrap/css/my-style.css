@@ -7,13 +7,18 @@ html{
 	margin-top : 50px;	
 }
 
-input[type="text"],input[type="password"]{	
+input[type="text"]{	
 	width:70%;
+}
+
+input[type="password"]{
+	width:60%;
 }
 
 
 #content {
 border : #000000 thin solid ;
+padding-left: 20px;
 }
 
 .titre{
@@ -25,3 +30,10 @@ font-size : 18px ;
 background : #ffffff ;
 }
 
+.error{
+color:red;
+}
+
+#connection {
+border : #000000 thin solid ;
+}

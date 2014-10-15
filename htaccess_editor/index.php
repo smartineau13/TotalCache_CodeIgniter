@@ -1,11 +1,11 @@
 <?php
+
 /**
+  * Htaccess Editor for CodeIgniter total cache
   * @author Sébastien Martineau
   * @date obctober 9th, 2014
-  * @version 1.0
-  * @file
+  * @version 2.0
   */
-
 
     //Creation of SQLite database
 	$dbname = 'base';
@@ -19,8 +19,10 @@
 	initializeDatabase();
 	
 	
-	//Definition of htaccess delimiters 
+	//Definition of htaccess delimiters
+    /**Delimits the beginning of total cache htaccess */	
 	define('CACHE_DELIMITER_START','#Beginning of cache. Don\'t erase this line');
+	/**Delimits the end of total cache htaccess */
 	define('CACHE_DELIMITER_END','#End of cache. Don\'t erase this line');	
 	
 	session_start();
@@ -32,12 +34,16 @@
 		session_destroy ();
 	}
 	
+	//If connection button was pressed
 	if (isset($_POST['password'])) {
 		if (isAlreadyDefinedPassword()){
 			if (checkPassword($_POST['password'])) {
 				$_SESSION['password'] = $_POST['password'];
-			} else {
-			echo 'wrong password';
+			} else { ?>
+			<script>
+				document.getElementById("error").innerHTML = 'Wrong password';
+			</script>
+			<?php
 			}			
 		} else {
 			insertPasswordInTable($_POST['password']);
@@ -45,7 +51,7 @@
 		}
 	}
 	
-	//if a session is opened
+	//If a session is opened
 	if (isset($_SESSION['password'])) {		
 	
 		
@@ -87,15 +93,14 @@
 		}
 	} else {?>
 		
-	<div class="row">
-		
-			<form method="post" action="">
-				<div class="col-md-4"><label>You are not connected</label></div>
-				<div class="col-md-4"><label for="password">Enter password :</label><input type="password" class="form-control" name="password" id="" /></div>
-				<div class="col-md-4"><br/><input type="submit" value="Validate" /></div>
-			</form>
+	<form method="post" action="">				
+		<div id="content" class="col-lg-offset-8 col-xs-3">
+			<label for="password">Enter password :</label>
+			<input type="password" class="form-control" name="password" id="" />
+			<input type="submit" value="Validate" />
+		</div>
+	</form>
 	  
-	</div>
 <?php
 
 	}
@@ -273,6 +278,11 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 		$results = $GLOBALS['base']->exec($query);
 	}
 	
+	/**
+	 * Inserts password in database 
+	 *
+	 * @param String $sPassword Password to insert in database
+	 */
 	function insertPasswordInTable($sPassword) {
 		$query = "INSERT INTO ". $GLOBALS['tableConnection']." VALUES (1, '$sPassword')";
 		$GLOBALS['base']->exec($query);
@@ -311,6 +321,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	
 	/**
 	 * Returns true if password entered corresponds to password saved in table config_htaccess
+	 * @param String $sPassword Password to be checked
 	 */
 	function checkPassword($sPassword) {
 		$query = 'SELECT count(*) as nb_rows FROM ' . $GLOBALS['tableConnection']." WHERE password='$sPassword'";
@@ -336,15 +347,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 		}  				
 		return false;	
 	}
-	
-	function afficheTable(){
-		$query = 'SELECT * FROM ' . $GLOBALS['tableConnection'];
-		$results = $GLOBALS['base']->query($query);
-		$row = $results->fetchArray();
-		echo $row['ID'];
-		echo $row['password'];	
-	}
-	
+		
 	
 	
 	
@@ -352,7 +355,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	//<!------------------------------------------------ View --------------------------------------------------->	
 ?><html lang="fr">
 <head>
-	<link href="bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet">
+	<link href="bootstrap/css/bootstrap.min.css" type="text/css" rel="stylesheet">
 	<link href="bootstrap/css/my-style.css" type="text/css" rel="stylesheet">
 	<meta charset="UTF-8">
 </head>
@@ -375,6 +378,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 <!-- form to modify cache path-->
 <form method="post" action="">
     <div class="row">
+	
         <div class="col-md-4"><label for="site_path">Enter cache path:</label></div>
         <div class="col-md-4"><input type="text" class="form-control" name="cache_path" id="" placeholder="Ex : static"  /></div>
 		<div class="col-md-4"><input type="submit" value="Update cache path" /></div>
