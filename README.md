@@ -78,7 +78,9 @@ The default directory to save cache files is "static". You can modify it.
 **Note**: this action will modify the code of library TotalCache. Make sure you added it in application/libraries.|      
  ---------------- |
  |
-
+<pre>
+test balise pre
+</pre>
 
 
 __Fully disable cache__
