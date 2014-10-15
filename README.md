@@ -43,12 +43,16 @@ viewAndCache() method will create the file param.html which will contain the vie
 
 4- So that the cache file is served directly without invoking CodeIgniter, you need to add these instructions in your htaccess file at your website's root.
 
->_RewriteEngine on_  
->_RewriteCond %{DOCUMENT_ROOT}/yourwebsite.com/static/$1 -f_  
->_RewriteRule ^(.*)$ static/$1 [L]_  
->RewriteCond $1 !^(static|index\.php|images|robots\.txt)_  
->RewriteRule ^(.*)$ index.php/$1 [L]_
-
+>
+<pre>
+	<code>
+	RewriteEngine on
+	RewriteCond %{DOCUMENT_ROOT}/yourwebsite.com/static/$1 -f
+	_RewriteRule ^(.*)$ static/$1 [L]
+	RewriteCond $1 !^(static|index\.php|images|robots\.txt)
+	RewriteRule ^(.*)$ index.php/$1 [L]
+	</code>
+</pre>
 
 
 #Htaccess editor for total cache
@@ -77,7 +81,8 @@ The default directory to save cache files is "static". You can modify it.
 
 >
 <pre>
-**Note**: this action will modify the code of library TotalCache. Make sure you added it in application/libraries.
+<strong>Note:</strong> this action will modify the code of library TotalCache.  
+Make sure you added it in application/libraries.
 </pre>
 
 
