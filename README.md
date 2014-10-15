@@ -48,7 +48,7 @@ viewAndCache() method will create the file param.html which will contain the vie
 	<code>
 	RewriteEngine on
 	RewriteCond %{DOCUMENT_ROOT}/yourwebsite.com/static/$1 -f
-	_RewriteRule ^(.*)$ static/$1 [L]
+	RewriteRule ^(.*)$ static/$1 [L]
 	RewriteCond $1 !^(static|index\.php|images|robots\.txt)
 	RewriteRule ^(.*)$ index.php/$1 [L]
 	</code>
@@ -62,7 +62,13 @@ viewAndCache() method will create the file param.html which will contain the vie
 
 If you're not very confortable with htaccess instructions you can use the htaccess editor.  
 1- Upload it at your website's root.   
-2- Run it by entering this url in your browser: yourwebsite.com/htaccess_editor   
+2- Run it by entering this url in your browser: yourwebsite.com/htaccess_editor
+>
+<pre>
+	Note: if you have this error message "SQLite 3 NOT supported", you need to
+	activate sqlite3 extension in PHP. Look for these lines in php.ini and delete ;
+	extension=php_sqlite3.dll && extension=phph_pdo_sqlite.dll
+</pre>   
 3- Enter a password so that nobody else can access the editor  
 4- Enter your own parameters  
 5- Delete tool from server when you don't need it anymore.  
