@@ -3,7 +3,7 @@
 ###How to use library TotalCache for CodeIgniter ?
 
 
-1- Copy the library in application/libraries
+1- Copy the library (TotalCache.php) in application/libraries
 
 2- To load it in CodeIgniter there are two possibilities:
 In application/config/autoload.php look for the following instruction $autoload['libraries']= array(); and add totalcache. 
