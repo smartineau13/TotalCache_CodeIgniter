@@ -26,14 +26,7 @@
 	define('CACHE_DELIMITER_END','#End of cache. Don\'t erase this line');	
 	
 	session_start();
-	if (isset($_POST['destroy_session'])) {
-		// On détruit les variables de notre session
-		session_unset ();
-
-		// On détruit notre session
-		session_destroy ();
-	}
-	
+		
 	//If connection button was pressed
 	if (isset($_POST['password'])) {
 		if (isAlreadyDefinedPassword()){
@@ -91,6 +84,7 @@
 			updateHtaccessConfigTable('method_disabled', $_POST['disable_cache_method']);
 			modifyHtaccess();
 		}
+	//If session is not opened
 	} else {?>
 		
 	<form method="post" action="">				
@@ -244,11 +238,11 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 		//Creation of table config_htaccess 
 		$query = "CREATE TABLE IF NOT EXISTS " . $GLOBALS['tableConfigHtaccess']." (
 					ID int NOT NULL PRIMARY KEY,
-					site_path VARCHAR(127),            
-					cache_path VARCHAR(127),
+					site_path VARCHAR(128),            
+					cache_path VARCHAR(128),
 					fully_disabled_cache boolean,
-					controller_disabled VARCHAR(63),
-					method_disabled VARCHAR(127)            
+					controller_disabled VARCHAR(64),
+					method_disabled VARCHAR(128)            
 					)";					
 		$results = $GLOBALS['base']->exec($query);
 		
@@ -431,9 +425,4 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	</div>
 </div>
 
-
-		<form method="post" action="">
-			<input type="hidden" value="" name="destroy_session"> 	
-			<input type="submit" value="Disconnect">
-		</form> 
 </html>
