@@ -136,25 +136,13 @@
 		$sHtaccessContent = "\n" 
 							. CACHE_DELIMITER_START
 							. ' 
-# Active le module de réécriture d\'URL.
-RewriteEngine on
+RewriteEngine on'
+."\n".$cDisablePart.'RewriteCond $1 !^('.$sPathToDisable.')'
+."\n".$cDisableAll.'RewriteCond %{DOCUMENT_ROOT}/'.$sSitePath.'/'.$sCachePath.'/$1 -f'
+."\n".$cDisableAll.'RewriteRule ^(.*)$ '.$sCachePath.'/$1 [L]'
 
-#Pour désactiver le système de cache pour un contrôleur ou pour une vue décommenter l\'instruction suivante
-#Remplacer controller_name par le nom du contrôleur et ajouter éventuellement le nom de la méthode et ses paramètres'
-."\n".$cDisablePart.'RewriteCond $1 !^('.$sPathToDisable.')
-
-#Pour désactiver totalement le système de cache, placer les deux instructions qui suivent en commentaire
-
-#Si le fichier est en cache (l\'option -f veut dire est un fichier)'
-."\n".$cDisableAll.'RewriteCond %{DOCUMENT_ROOT}/'.$sSitePath.'/'.$sCachePath.'/$1 -f
-#alors on réécrit l\'url en ajoutant le dossier dans lequel sont stockées les pages statiques'
-."\n".$cDisableAll.'RewriteRule ^(.*)$ '.$sCachePath.'/$1 [L]
-
-
-#Sinon si le fichier n\'est pas en cache 
-#Et que l\'on ne tente pas déjà d\'accéder à l\'application CodeIgniter, au dossier d\'images, à robot.txt ou aux pages statiques
+."\n\n".'
 RewriteCond $1 !^('.$sCachePath.'|index\.php|images|robots\.txt|htaccess_editor)
-#Alors on redirige vers l\'application CodeIgniter en ajoutant index.php/ dans l\'url
 RewriteRule ^(.*)$ index.php/$1 [L]
 '.CACHE_DELIMITER_END;
 		return $sHtaccessContent;
@@ -353,18 +341,16 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 	<link href="bootstrap/css/my-style.css" type="text/css" rel="stylesheet">
 	<meta charset="UTF-8">
 </head>
+
 <!-- Title -->
 <h1>Htaccess editor</h1>
-
-<!-- form to create password-->
-
 
 
 <!-- form to modify site path-->
 <form method="post" action="">
     <div class="row">
         <div class="col-md-4"><label for="site_path">Enter site path:</label></div>
-        <div class="col-md-4"><input type="text" class="form-control" name="site_path" id="" placeholder="Ex : scripts/monsite" /></div>
+        <div class="col-md-4"><input type="text" class="form-control" name="site_path" placeholder="Ex : scripts/monsite" /></div>
 		<div class="col-md-4"><input type="submit" value="Update site path" /></div>
     </div>
 </form>
@@ -374,7 +360,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
     <div class="row">
 	
         <div class="col-md-4"><label for="site_path">Enter cache path:</label></div>
-        <div class="col-md-4"><input type="text" class="form-control" name="cache_path" id="" placeholder="Ex : static"  /></div>
+        <div class="col-md-4"><input type="text" class="form-control" name="cache_path" placeholder="Ex : static"  /></div>
 		<div class="col-md-4"><input type="submit" value="Update cache path" /></div>
     </div>
 </form>
@@ -385,9 +371,9 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 		<div class="col-md-4"><label>Partially disable cache <label/></div>
         <div class="col-md-4">
 			<label for="disable_cache_controller">For contoller :</label>
-			<input type="text" class="form-control" name="disable_cache_controller" id="" placeholder="Ex : controller" />
+			<input type="text" class="form-control" name="disable_cache_controller" placeholder="Ex : controller" />
 			<label for="disable_cache_method">For method :</label>
-			<input type="text" class="form-control" name="disable_cache_method" id="" placeholder="Ex : method" />
+			<input type="text" class="form-control" name="disable_cache_method" placeholder="Ex : method" />
 		</div>
 		<div class="col-md-4"><br/><br/><input type="submit" value="Partially disable cache"/></div>
     </div>
